@@ -6,7 +6,7 @@ The OLSK60 is a 61-key 60% keyboard. The alpha portion of the keyboard is arrang
 - All keys can be covered by GMK or ePBT Base Kit only.
 - It can be mounted in a GH60 compatible case.
 - Screwless mounting in GH60 compatible cases.
-- PRK Firmware is supported, and key setting can be done by Remap.
+- PRK Firmware is supported, and only keymap can be set by Remap.
 - KMK Firmware will be supported, and support for Peg is under consideration.
 
 
