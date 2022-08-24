@@ -1,7 +1,7 @@
 # OLSK60
 OrthoLinear for the Standard Keysets 60%
 
-The OLSK60 is a 61-key 60% keyboard. The alpha portion of the keyboard is arranged in an ortholinear layout, while the modifier keys are arranged in a standard key set. This keyboard provides the following
+The OLSK60 is a 58-60key 60% keyboard. The alpha portion of the keyboard is arranged in an ortholinear layout, while the modifier keys are arranged in a standard key set. This keyboard provides the following
 
 - All keys can be covered by GMK or ePBT Base Kit only.
 - It can be mounted in a GH60 compatible case.
