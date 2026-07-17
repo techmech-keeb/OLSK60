@@ -8,7 +8,16 @@ on:
         required: true
         default: 'dev'
         type: string
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version label passed by the caller (e.g. release tag)'
+        required: false
+        default: 'dev'
+        type: string
   push:
+    branches:
+      - '**'
     paths:
       - '.github/workflows/build-olsk60-firmware.yml'
       - 'Firmware/qmk-config/techmechkeys/olsk60/**'

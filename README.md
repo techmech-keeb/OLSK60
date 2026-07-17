@@ -62,6 +62,19 @@ GitHub Actions（[`.github/workflows/build-olsk60-firmware.yml`](.github/workflo
 5. 自動的に再起動し、書き込み完了。
 6. VIA 版は `olsk60_via.json` を VIA に読み込ませて使用します。Vial 版は定義内蔵です。
 
+### リリース
+
+`v*` タグ（例 `v1.0.0`）を push すると、
+[`release-olsk60-firmware.yml`](.github/workflows/release-olsk60-firmware.yml) が
+VIA / Vial をビルドして GitHub Release を作成し、`.uf2` と `olsk60_via.json` を添付します。
+詳細は [リリース運用](Firmware/qmk-config/techmechkeys/olsk60/docs/release_process.md) を参照。
+
+### ドキュメント
+
+- [マトリクス / キーマップ対応表](Firmware/qmk-config/techmechkeys/olsk60/docs/matrix_keymap_map.md)
+- [実機検証チェックリスト](Firmware/qmk-config/techmechkeys/olsk60/docs/hardware_verification_checklist.md)
+- [リリース運用（タグ設計）](Firmware/qmk-config/techmechkeys/olsk60/docs/release_process.md)
+
 ## ディレクトリ構成
 
 ```text
