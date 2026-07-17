@@ -1,0 +1,62 @@
+name: Release OLSK60 firmware
+
+# タグ push（v* 形式）で VIA / Vial ファームウェアをビルドし、
+# GitHub Release を作成して .uf2 と VIA 用 JSON を添付する。
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-olsk60-firmware.yml
+    with:
+      version: ${{ github.ref_name }}
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout OLSK60
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: olsk60-*-firmware
+          merge-multiple: true
+
+      - name: Prepare release notes
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          version="${REF_NAME#v}"
+          template=".github/release-notes/olsk60-public.md"
+          if [ -f "$template" ]; then
+            sed "s/{version}/${version}/g" "$template" > release-notes.md
+          else
+            printf 'OLSK60 firmware %s\n' "$version" > release-notes.md
+          fi
+          echo "Assets to attach:"
+          find dist -type f \( -name '*.uf2' -o -name '*.json' \) -print
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          mapfile -t assets < <(find dist -type f \( -name '*.uf2' -o -name '*.json' \) | sort)
+          if [ "${#assets[@]}" -eq 0 ]; then
+            echo "No firmware assets found to attach" >&2
+            exit 1
+          fi
+          gh release create "$REF_NAME" "${assets[@]}" \
+            --repo "${{ github.repository }}" \
+            --title "OLSK60 firmware $REF_NAME" \
+            --notes-file release-notes.md

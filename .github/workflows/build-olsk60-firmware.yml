@@ -1,0 +1,137 @@
+name: Build OLSK60 firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'OLSK60 firmware version label for artifact names'
+        required: true
+        default: 'dev'
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version label passed by the caller (e.g. release tag)'
+        required: false
+        default: 'dev'
+        type: string
+  push:
+    branches:
+      - '**'
+    paths:
+      - '.github/workflows/build-olsk60-firmware.yml'
+      - 'Firmware/qmk-config/techmechkeys/olsk60/**'
+  pull_request:
+    paths:
+      - '.github/workflows/build-olsk60-firmware.yml'
+      - 'Firmware/qmk-config/techmechkeys/olsk60/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build OLSK60 ${{ matrix.display_name }} firmware
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: via
+            display_name: VIA
+            upstream: https://github.com/qmk/qmk_firmware.git
+            ref: b1093e9da5f27253f3db692352daf5cf4ad5b98d
+            keymap: via
+          - name: vial
+            display_name: Vial
+            upstream: https://github.com/vial-kb/vial-qmk.git
+            ref: 00fc4627cd038ac9b7e9b8bf2b40b50e9e88aecb
+            keymap: vial
+
+    steps:
+      - name: Checkout OLSK60
+        uses: actions/checkout@v4
+        with:
+          path: olsk60
+
+      - name: Install ARM toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+          arm-none-eabi-gcc --version
+
+      - name: Install QMK CLI
+        run: |
+          python3 -m pip install --user qmk
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Checkout firmware upstream
+        run: |
+          git init firmware
+          git -C firmware remote add origin "${{ matrix.upstream }}"
+          git -C firmware fetch --depth 1 origin "${{ matrix.ref }}"
+          git -C firmware checkout --detach FETCH_HEAD
+          git -C firmware submodule update --init --recursive --depth 1
+          git -C firmware rev-parse HEAD
+
+      - name: Setup QMK home
+        run: |
+          qmk setup -H firmware -y
+
+      - name: Copy OLSK60 keyboard definition
+        run: |
+          mkdir -p firmware/keyboards/techmechkeys
+          rm -rf firmware/keyboards/techmechkeys/olsk60
+          cp -R olsk60/Firmware/qmk-config/techmechkeys/olsk60 firmware/keyboards/techmechkeys/olsk60
+
+      - name: Build firmware
+        working-directory: firmware
+        run: |
+          qmk compile -kb techmechkeys/olsk60 -km "${{ matrix.keymap }}"
+
+      - name: Collect UF2 artifacts
+        env:
+          INPUT_VERSION: ${{ inputs.version || '' }}
+          PR_NUMBER: ${{ github.event.pull_request.number || '' }}
+        run: |
+          mkdir -p artifacts
+          expected_uf2="techmechkeys_olsk60_${{ matrix.keymap }}.uf2"
+          root_uf2="firmware/${expected_uf2}"
+          build_uf2="firmware/.build/${expected_uf2}"
+
+          if [ -f "$root_uf2" ]; then
+            selected_uf2="$root_uf2"
+          elif [ -f "$build_uf2" ]; then
+            selected_uf2="$build_uf2"
+          else
+            echo "Expected UF2 not found for ${{ matrix.keymap }}: $root_uf2 or $build_uf2" >&2
+            echo 'All UF2 files under firmware:' >&2
+            find firmware -type f -name '*.uf2' -print | sort >&2
+            exit 1
+          fi
+
+          if [ -n "$INPUT_VERSION" ]; then
+            version="$INPUT_VERSION"
+          elif [ -n "$PR_NUMBER" ]; then
+            version="pr-${PR_NUMBER}"
+          else
+            version="dev"
+          fi
+          safe_version="$(printf '%s' "$version" | tr -c 'A-Za-z0-9._-' '-')"
+
+          cp "$selected_uf2" "artifacts/OLSK60_${{ matrix.display_name }}_${safe_version}.uf2"
+
+          if [ "${{ matrix.name }}" = "via" ]; then
+            via_json="olsk60/Firmware/qmk-config/techmechkeys/olsk60/olsk60_via.json"
+            test -f "$via_json"
+            cp "$via_json" "artifacts/OLSK60_via_${safe_version}.json"
+          fi
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: olsk60-${{ matrix.name }}-firmware
+          path: |
+            artifacts/**/*.uf2
+            artifacts/**/*.json
+          retention-days: 14
