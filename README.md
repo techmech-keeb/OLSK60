@@ -12,8 +12,9 @@ OrthoLinear for the Standard Keysets 60%
 
 ## 設計思想
 
-OLSK60 は、**OrthoLinear for the Standard Keysets** に由来する、58〜60 キーの
-60% キーボードです。アルファ部を格子（オーソリニア）配列、モディファイア部を標準キーセット配列にしています。
+OLSK60 は 58〜60 キーの 60% キーボードです。その名は **OrthoLinear for the
+Standard Keysets** に由来し、アルファ部を格子（オーソリニア）配列、
+モディファイア部を標準キーセット配列にしています。
 
 一般にオーソリニア配列では全 1U などの専用キーキャップが必要になりがちです。OLSK60 は、
 GMK / ePBT の Base Kit だけで全キーが揃うように配列を設計し、格子配列の合理性と
