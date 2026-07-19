@@ -77,8 +77,12 @@ void keyboard_post_init_user(void) {
     olsk60_load_sound_config();
 
     rgblight_enable();
-    rgblight_mode(RGBLIGHT_MODE_BREATHING);
-    rgblight_set_clipping_range(OLSK60_UNDERGLOW_LED_START, OLSK60_UNDERGLOW_LED_COUNT);
+    /*
+     * Effect range preserves physical LED numbering: rgblight animations use
+     * LEDs 1-21 while rgblight_sethsv_at(..., 0) writes physical LED 0.
+     * Do not use clipping here; clipping remaps logical indices before output.
+     */
+    rgblight_set_effect_range(OLSK60_UNDERGLOW_LED_START, OLSK60_UNDERGLOW_LED_COUNT);
     olsk60_set_indicator();
 }
 
@@ -92,10 +96,8 @@ void housekeeping_task_user(void) {
     if (timer_elapsed(indicator_breathe_timer) >= OLSK60_BREATHE_INTERVAL_MS) {
         indicator_breathe_timer = timer_read();
         indicator_breathe_step = (indicator_breathe_step + 1) % ARRAY_SIZE(indicator_breathe_offsets);
+        olsk60_set_indicator();
     }
-
-    /* Clipping confines rgblight effects to LEDs 1-21; write LED 0 explicitly. */
-    olsk60_set_indicator();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {

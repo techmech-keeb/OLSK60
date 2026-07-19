@@ -81,7 +81,7 @@
 |40|SW14|3,2|1|X|X|SOUND_MODE_TOGGLE|
 |41|SW19|3,3|1|C|C|PIANO_OCTAVE_UP|
 |42|SW24|3,4|1|V|V|PIANO_OCTAVE_DOWN|
-|43|SW29|3,5|1|B|B|B|
+|43|SW29|3,5|1|B|B|QK_BOOT|
 |44|SW34|8,5|1|N|N|N|
 |45|SW39|8,4|1|M|M|M|
 |46|SW44|8,3|1|,|,|,|
@@ -105,8 +105,8 @@
 - **L2 の #44/#45**: 旧 `via_map.txt` では `N→NumLock` / `M→N` と 1 つずれていた
   （PRK 側の打ち間違いと判断）。本ファームでは `#44=N` / `#45=M` に修正済み。
 - **レイヤー数**: 旧 PRK は 3。本ファームは 4（`_BASE` / `_FN` / `_RGB` / `_EXTRA`）。
-  `_EXTRA` は予備で、Esc 位置のみ `QK_BOOT`。
-- **FUNC キー**: 旧 `VIA_FUNC0`=BOOTSEL は `QK_BOOT`（_EXTRA 左上）に、
+  `_EXTRA` は予備で全透過。
+- **FUNC キー**: 旧 `VIA_FUNC0`=BOOTSEL は `QK_BOOT`（L2 の B 位置）に、
   `VIA_FUNC1`=Enter/Layer1 は `LT(_FN, KC_ENT)`、`VIA_FUNC2`=Space/Layer2 は
   `LT(_RGB, KC_SPC)` に置換。
 - **6.25U スペース option（SW25-1）**: 電気的に Fn1 ノード（`4,4`）を共有。
@@ -142,4 +142,4 @@
 | Bksp | `QK_RBT` | RP2040 を再起動 |
 | \（2段目右端） | `OLSK_UG_TOG` | RGB 操作クラスタの近傍へ移動 |
 | Z / X / C / V | `ALL_SOUND_TOGGLE` / `SOUND_MODE_TOGGLE` / `PIANO_OCTAVE_UP` / `PIANO_OCTAVE_DOWN` | サウンド制御 |
-| _EXTRA Esc | `QK_BOOT` | BOOTSEL を保持 |
+| B | `QK_BOOT` | BOOTSEL を到達可能な L2 内へ移動 |
