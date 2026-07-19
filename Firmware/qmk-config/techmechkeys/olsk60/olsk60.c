@@ -8,7 +8,14 @@
 #define OLSK60_INDICATOR_LED 0
 #define OLSK60_UNDERGLOW_LED_START 1
 #define OLSK60_UNDERGLOW_LED_COUNT 21
-#define OLSK60_BREATHE_INTERVAL_MS 125
+#define OLSK60_BREATHE_PERIOD_MS 3000
+#define OLSK60_BASE_VAL_MIN 3
+#define OLSK60_BASE_VAL_MAX 45
+#define OLSK60_LAYER_VAL_MIN 5
+#define OLSK60_LAYER_VAL_MAX 47
+#define OLSK60_BLINK_ON_MS 60
+#define OLSK60_BLINK_OFF_MS 40
+#define OLSK60_BLINK_VAL 128
 
 typedef struct {
     uint8_t hue;
@@ -21,12 +28,6 @@ static const olsk60_indicator_hsv_t indicator_colors[] = {
     [_FN]    = {120, 255, 26},
     [_RGB]   = {85,  255, 26},
     [_EXTRA] = {170, 255, 26},
-};
-
-/* One 4-second, 32-step sine cycle scaled to a +/-6 value modulation. */
-static const int8_t indicator_breathe_offsets[] = {
-    0, 1, 2, 3, 4, 5, 6, 6, 6, 6, 6, 5, 4, 3, 2, 1,
-    0, -1, -2, -3, -4, -5, -6, -6, -6, -6, -6, -5, -4, -3, -2, -1,
 };
 
 typedef struct {
@@ -42,8 +43,11 @@ _Static_assert(sizeof(olsk60_user_config_t) == EECONFIG_USER_DATA_SIZE, "size");
 #define OLSK60_CFG_VER   0x01
 
 static uint8_t indicator_layer = _BASE;
-static uint16_t indicator_breathe_timer;
-static uint8_t indicator_breathe_step;
+static uint8_t indicator_last_val = UINT8_MAX;
+static uint16_t indicator_blink_timer;
+static uint8_t indicator_blink_pulses;
+static bool indicator_blink_on;
+static hsv_t indicator_blink_color;
 
 static void olsk60_save_sound_config(void) {
     const olsk60_user_config_t config = {
@@ -65,11 +69,30 @@ static void olsk60_load_sound_config(void) {
     }
 }
 
+static uint8_t olsk60_indicator_value(void) {
+    const olsk60_indicator_hsv_t color = indicator_colors[indicator_layer];
+    const uint8_t min = indicator_layer == _BASE ? OLSK60_BASE_VAL_MIN : OLSK60_LAYER_VAL_MIN;
+    const uint8_t max = indicator_layer == _BASE ? OLSK60_BASE_VAL_MAX : OLSK60_LAYER_VAL_MAX;
+    const uint8_t phase = (uint32_t)timer_read32() * 256 / OLSK60_BREATHE_PERIOD_MS;
+
+    /* QMK's 8-bit sine keeps the phase continuous while retaining integer math. */
+    return min + ((uint16_t)(max - min) * sin8(phase)) / UINT8_MAX;
+}
+
 static void olsk60_set_indicator(void) {
     const olsk60_indicator_hsv_t color = indicator_colors[indicator_layer];
-    int16_t value = color.val + indicator_breathe_offsets[indicator_breathe_step];
+    const uint8_t value = olsk60_indicator_value();
 
-    rgblight_sethsv_at(color.hue, color.sat, (uint8_t)value, OLSK60_INDICATOR_LED);
+    indicator_last_val = value;
+    rgblight_sethsv_at(color.hue, color.sat, value, OLSK60_INDICATOR_LED);
+}
+
+static void olsk60_start_indicator_blink(hsv_t color, uint8_t pulses) {
+    indicator_blink_color = color;
+    indicator_blink_pulses = pulses;
+    indicator_blink_on = true;
+    indicator_blink_timer = timer_read();
+    rgblight_sethsv_at(color.h, color.s, OLSK60_BLINK_VAL, OLSK60_INDICATOR_LED);
 }
 
 void keyboard_post_init_user(void) {
@@ -93,9 +116,24 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 }
 
 void housekeeping_task_user(void) {
-    if (timer_elapsed(indicator_breathe_timer) >= OLSK60_BREATHE_INTERVAL_MS) {
-        indicator_breathe_timer = timer_read();
-        indicator_breathe_step = (indicator_breathe_step + 1) % ARRAY_SIZE(indicator_breathe_offsets);
+    if (indicator_blink_pulses) {
+        if (timer_elapsed(indicator_blink_timer) >= (indicator_blink_on ? OLSK60_BLINK_ON_MS : OLSK60_BLINK_OFF_MS)) {
+            indicator_blink_timer = timer_read();
+            if (indicator_blink_on) {
+                indicator_blink_on = false;
+                rgblight_sethsv_at(0, 0, 0, OLSK60_INDICATOR_LED);
+            } else if (--indicator_blink_pulses) {
+                indicator_blink_on = true;
+                rgblight_sethsv_at(indicator_blink_color.h, indicator_blink_color.s, OLSK60_BLINK_VAL, OLSK60_INDICATOR_LED);
+            } else {
+                olsk60_set_indicator();
+            }
+        }
+        return;
+    }
+
+    const uint8_t value = olsk60_indicator_value();
+    if (value != indicator_last_val) {
         olsk60_set_indicator();
     }
 }
@@ -108,11 +146,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case ALL_SOUND_TOGGLE:
                 key_sound_set_all_enabled(!key_sound_get_all_enabled());
                 olsk60_save_sound_config();
+                olsk60_start_indicator_blink((hsv_t){key_sound_get_all_enabled() ? 85 : 0, 255, OLSK60_BLINK_VAL}, 2);
                 return false;
             case SOUND_MODE_TOGGLE:
                 if (key_sound_get_all_enabled()) {
                     key_sound_set_mode(key_sound_get_mode() == KEY_SOUND_MODE_RANDOM ? KEY_SOUND_MODE_PIANO : KEY_SOUND_MODE_RANDOM);
                     olsk60_save_sound_config();
+                    olsk60_start_indicator_blink((hsv_t){key_sound_get_mode() == KEY_SOUND_MODE_PIANO ? 170 : 43, 255, OLSK60_BLINK_VAL}, 2);
                 }
                 return false;
             case PIANO_OCTAVE_UP:
