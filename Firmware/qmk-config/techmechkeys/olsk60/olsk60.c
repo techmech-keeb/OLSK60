@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include QMK_KEYBOARD_H
+#include "lib/lib8tion/lib8tion.h"
 #include "olsk60.h"
 #include "olsk60_keycodes.h"
 #include "key_sound.h"
@@ -70,7 +71,6 @@ static void olsk60_load_sound_config(void) {
 }
 
 static uint8_t olsk60_indicator_value(void) {
-    const olsk60_indicator_hsv_t color = indicator_colors[indicator_layer];
     const uint8_t min = indicator_layer == _BASE ? OLSK60_BASE_VAL_MIN : OLSK60_LAYER_VAL_MIN;
     const uint8_t max = indicator_layer == _BASE ? OLSK60_BASE_VAL_MAX : OLSK60_LAYER_VAL_MAX;
     const uint8_t phase = (uint32_t)timer_read32() * 256 / OLSK60_BREATHE_PERIOD_MS;
