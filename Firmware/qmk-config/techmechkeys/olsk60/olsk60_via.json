@@ -3,6 +3,12 @@
     "vendorId": "0x84E9",
     "productId": "0x7960",
     "lighting": "qmk_rgblight",
+    "customKeycodes": [
+        {"name": "Sound Toggle", "title": "All key sound on/off", "shortName": "SndTog"},
+        {"name": "Sound Mode", "title": "Toggle random/piano mode", "shortName": "SndMod"},
+        {"name": "Piano Oct +", "title": "Piano octave up", "shortName": "Oct+"},
+        {"name": "Piano Oct -", "title": "Piano octave down", "shortName": "Oct-"}
+    ],
     "matrix": {
         "rows": 10,
         "cols": 6

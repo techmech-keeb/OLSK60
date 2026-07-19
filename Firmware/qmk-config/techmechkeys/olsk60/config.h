@@ -38,3 +38,14 @@
 #    define OLSK_UG_SPDU UG_SPDU
 #    define OLSK_UG_SPDD UG_SPDD
 #endif
+
+#ifdef AUDIO_ENABLE
+#    define AUDIO_PIN GP6
+#    define AUDIO_PWM_DRIVER PWMD3
+#    define AUDIO_PWM_CHANNEL RP2040_PWM_CHANNEL_A
+#    define AUDIO_INIT_DELAY
+#    define STARTUP_SONG SONG(NO_SOUND)
+#endif
+
+// サウンドフラグの EEPROM 保存用（user datablock）
+#define EECONFIG_USER_DATA_SIZE 4

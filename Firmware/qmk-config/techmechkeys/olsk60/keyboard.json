@@ -24,7 +24,7 @@
         "pin": "GP9"
     },
     "rgblight": {
-        "led_count": 21,
+        "led_count": 22,
         "sleep": true,
         "default": {
             "animation": "breathing"
