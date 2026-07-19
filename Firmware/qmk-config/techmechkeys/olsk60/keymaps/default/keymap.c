@@ -2,19 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include QMK_KEYBOARD_H
-
-// レイヤー定義
-enum layers {
-    _BASE,  // 基本レイヤー
-    _FN,    // Fn（Enter 保持で有効）
-    _RGB,   // RGB / ナビ（Space 保持で有効）
-    _EXTRA, // 予備（VIA/Vial 編集用）
-};
+#include "olsk60_keycodes.h"
 
 // PRK 版の VIA_FUNC を QMK のレイヤータップで再現
 //   FUNC1: タップ=Enter / 保持=_FN
 //   FUNC2: タップ=Space / 保持=_RGB
-//   FUNC0(bootloader) は _RGB レイヤーの左上（QK_BOOT）に配置
+//   FUNC0(bootloader) は _RGB レイヤーの B 位置（QK_BOOT）に配置
 #define FUNC1 LT(_FN, KC_ENT)
 #define FUNC2 LT(_RGB, KC_SPC)
 
@@ -47,10 +40,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     /* _RGB */
     [_RGB] = LAYOUT(
-        QK_BOOT, OLSK_UG_SPDU, OLSK_UG_SPDD, OLSK_UG_VALU, OLSK_UG_VALD, OLSK_UG_SATU, OLSK_UG_SATD, OLSK_UG_HUEU, OLSK_UG_HUED, OLSK_UG_NEXT, OLSK_UG_PREV, OLSK_UG_TOG,
-        KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,     KC_LBRC, KC_BSLS,
+        EE_CLR,  OLSK_UG_SPDU, OLSK_UG_SPDD, OLSK_UG_VALU, OLSK_UG_VALD, OLSK_UG_SATU, OLSK_UG_SATD, OLSK_UG_HUEU, OLSK_UG_HUED, OLSK_UG_NEXT, OLSK_UG_PREV, QK_RBT,
+        KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,     KC_LBRC, OLSK_UG_TOG,
         KC_LCTL, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,  KC_ENT,
-        KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_PGUP, KC_RSFT,
+        KC_LSFT, ALL_SOUND_TOGGLE, SOUND_MODE_TOGGLE, PIANO_OCTAVE_UP, PIANO_OCTAVE_DOWN, QK_BOOT, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_PGUP, KC_RSFT,
         KC_LCTL, KC_LGUI, KC_LALT, KC_SPC,  _______, KC_DEL,  _______, KC_HOME, KC_PGDN, KC_END
     ),
 

@@ -39,7 +39,7 @@
 
 | # | SW | 電気[Row,Col] | サイズ | L0 | L1(Fn) | L2(RGB) |
 |--:|:--:|:--:|:--:|:--|:--|:--|
-|1|SW1|0,0|1|Esc|`` ` ``|QK_BOOT|
+|1|SW1|0,0|1|Esc|`` ` ``|EE_CLR|
 |2|SW6|0,1|1|1|F1|RGB_SPI|
 |3|SW11|0,2|1|2|F2|RGB_SPD|
 |4|SW16|0,3|1|3|F3|RGB_VAI|
@@ -50,7 +50,7 @@
 |9|SW41|5,3|1|8|F8|RGB_HUD|
 |10|SW46|5,2|1|9|F9|RGB_MOD|
 |11|SW51|5,1|1|0|F10|RGB_RMOD|
-|12|SW56|5,0|2|Bksp|Bksp|RGB_TOG|
+|12|SW56|5,0|2|Bksp|Bksp|QK_RBT|
 |13|SW2|1,0|1.5|Tab|Tab|Tab|
 |14|SW7|1,1|1|Q|F11|Q|
 |15|SW12|1,2|1|W|F12|W|
@@ -63,7 +63,7 @@
 |22|SW47|6,2|1|O|O|O|
 |23|SW52|6,1|1|P|PrtSc|P|
 |24|SW57|6,0|1|[|]|[|
-|25|SW60|9,0|1.5|\\ (BCSL)|Delete|\\|
+|25|SW60|9,0|1.5|\\ (BCSL)|Delete|RGB_TOG|
 |26|SW3|2,0|1.75|LCtrl|CapsLock|LCtrl|
 |27|SW8|2,1|1|A|A|A|
 |28|SW13|2,2|1|S|S|S|
@@ -77,11 +77,11 @@
 |36|SW53|7,1|1|;|]|;|
 |37|SW58|7,0|2.25|Enter|Enter|Enter|
 |38|SW4|3,0|1.75|LShift|LShift|LShift|
-|39|SW9|3,1|1|Z|Z|Z|
-|40|SW14|3,2|1|X|X|X|
-|41|SW19|3,3|1|C|C|C|
-|42|SW24|3,4|1|V|V|V|
-|43|SW29|3,5|1|B|B|B|
+|39|SW9|3,1|1|Z|Z|ALL_SOUND_TOGGLE|
+|40|SW14|3,2|1|X|X|SOUND_MODE_TOGGLE|
+|41|SW19|3,3|1|C|C|PIANO_OCTAVE_UP|
+|42|SW24|3,4|1|V|V|PIANO_OCTAVE_DOWN|
+|43|SW29|3,5|1|B|B|QK_BOOT|
 |44|SW34|8,5|1|N|N|N|
 |45|SW39|8,4|1|M|M|M|
 |46|SW44|8,3|1|,|,|,|
@@ -106,7 +106,7 @@
   （PRK 側の打ち間違いと判断）。本ファームでは `#44=N` / `#45=M` に修正済み。
 - **レイヤー数**: 旧 PRK は 3。本ファームは 4（`_BASE` / `_FN` / `_RGB` / `_EXTRA`）。
   `_EXTRA` は予備で全透過。
-- **FUNC キー**: 旧 `VIA_FUNC0`=BOOTSEL は `QK_BOOT`（L2 左上）に、
+- **FUNC キー**: 旧 `VIA_FUNC0`=BOOTSEL は `QK_BOOT`（L2 の B 位置）に、
   `VIA_FUNC1`=Enter/Layer1 は `LT(_FN, KC_ENT)`、`VIA_FUNC2`=Space/Layer2 は
   `LT(_RGB, KC_SPC)` に置換。
 - **6.25U スペース option（SW25-1）**: 電気的に Fn1 ノード（`4,4`）を共有。
@@ -132,3 +132,14 @@
 > レイアウト切り替え（layout option）としての露出は、実機確認後に対応する。
 
 - 上記の割り当て（特に最下段・矢印まわり）は**実機デバッグで最終確認する**。
+
+## L2（_RGB）の最終配置
+
+| 位置 | 割り当て | 備考 |
+|---|---|---|
+| Esc | `EE_CLR` | EEPROM 初期化 |
+| 1–0 | `OLSK_UG_SPDU`, `OLSK_UG_SPDD`, `OLSK_UG_VALU`, `OLSK_UG_VALD`, `OLSK_UG_SATU`, `OLSK_UG_SATD`, `OLSK_UG_HUEU`, `OLSK_UG_HUED`, `OLSK_UG_NEXT`, `OLSK_UG_PREV` | 従来のアンダーグロー操作を維持 |
+| Bksp | `QK_RBT` | RP2040 を再起動 |
+| \（2段目右端） | `OLSK_UG_TOG` | RGB 操作クラスタの近傍へ移動 |
+| Z / X / C / V | `ALL_SOUND_TOGGLE` / `SOUND_MODE_TOGGLE` / `PIANO_OCTAVE_UP` / `PIANO_OCTAVE_DOWN` | サウンド制御 |
+| B | `QK_BOOT` | BOOTSEL を到達可能な L2 内へ移動 |
