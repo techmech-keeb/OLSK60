@@ -9,11 +9,12 @@
 #define OLSK60_INDICATOR_LED 0
 #define OLSK60_UNDERGLOW_LED_START 1
 #define OLSK60_UNDERGLOW_LED_COUNT 21
-#define OLSK60_BREATHE_PERIOD_MS 3000
-#define OLSK60_BASE_VAL_MIN 3
-#define OLSK60_BASE_VAL_MAX 45
-#define OLSK60_LAYER_VAL_MIN 5
-#define OLSK60_LAYER_VAL_MAX 47
+#define OLSK60_BREATHE_PERIOD_MS 4000
+#define OLSK60_BASE_VAL_FLOOR 4
+#define OLSK60_BASE_VAL_CEIL 70
+#define OLSK60_LAYER_VAL_FLOOR 5
+#define OLSK60_LAYER_VAL_CEIL 47
+#define OLSK60_GAMMA_NUMERATOR 2
 #define OLSK60_BLINK_ON_MS 60
 #define OLSK60_BLINK_OFF_MS 40
 #define OLSK60_BLINK_VAL 128
@@ -71,12 +72,15 @@ static void olsk60_load_sound_config(void) {
 }
 
 static uint8_t olsk60_indicator_value(void) {
-    const uint8_t min = indicator_layer == _BASE ? OLSK60_BASE_VAL_MIN : OLSK60_LAYER_VAL_MIN;
-    const uint8_t max = indicator_layer == _BASE ? OLSK60_BASE_VAL_MAX : OLSK60_LAYER_VAL_MAX;
+    const uint8_t floor = indicator_layer == _BASE ? OLSK60_BASE_VAL_FLOOR : OLSK60_LAYER_VAL_FLOOR;
+    const uint8_t ceil = indicator_layer == _BASE ? OLSK60_BASE_VAL_CEIL : OLSK60_LAYER_VAL_CEIL;
     const uint8_t phase = (uint32_t)timer_read32() * 256 / OLSK60_BREATHE_PERIOD_MS;
+    const uint8_t sine = sin8(phase);
+    const uint8_t gamma = ((uint16_t)sine * sine) / UINT8_MAX;
+    const uint16_t value = floor + ((uint16_t)(ceil - floor) * gamma) / UINT8_MAX;
 
-    /* QMK's 8-bit sine keeps the phase continuous while retaining integer math. */
-    return min + ((uint16_t)(max - min) * sin8(phase)) / UINT8_MAX;
+    /* Integer gamma ~=2 expands low-end phase resolution for 8-bit WS2812 output. */
+    return value > UINT8_MAX ? UINT8_MAX : (uint8_t)value;
 }
 
 static void olsk60_set_indicator(void) {
